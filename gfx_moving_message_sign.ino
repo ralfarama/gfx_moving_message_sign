@@ -129,6 +129,40 @@ void set_matrix_col_latch(int latch_num, int latch_bit, int latch_set) {
   digitalWrite(PIN_CSG2B,HIGH);
 }
 
+void set_matrix_bank_register(int bank,int reg_value) {
+  int bankbit0, bankbit1,bankbit2;
+
+  if ( (bank+2) & 1 ) { bankbit0 = HIGH; } else { bankbit0 = LOW; }
+  if ( (bank+2) & 2 ) { bankbit1 = HIGH; } else { bankbit1 = LOW; }
+  if ( (bank+2) & 4 ) { bankbit2 = HIGH; } else { bankbit2 = LOW; }  
+  // start by disabling LS138 outputs
+  digitalWrite(PIN_CSG2A,HIGH);
+  digitalWrite(PIN_CSG2B,HIGH);
+  // set LS138 select bits to choose desired LS273 register
+  digitalWrite(PIN_CSSA,bankbit0);
+  digitalWrite(PIN_CSSB,bankbit1);
+  digitalWrite(PIN_CSSC,bankbit2);
+  // disable the reset on the register
+  digitalWrite(PIN_DBUS0,HIGH);
+  // set data bus values
+  for ( int i = 0; i < 7; i++ ) {
+    int portnum = i + 3;
+    int portbit;
+    
+    if ( reg_value & ( 1 << i ) ) {
+      portbit = HIGH;
+    } else {
+      portbit = LOW;
+    }
+    digitalWrite(portnum,portbit);
+  }
+  // strobe the LS138 output enable lines to perform the load
+  digitalWrite(PIN_CSG2A,LOW);
+  digitalWrite(PIN_CSG2B,LOW);
+  digitalWrite(PIN_CSG2A,HIGH);
+  digitalWrite(PIN_CSG2B,HIGH);  
+}
+
 void movingsign_bootstrap(void) {
   // 74LS138 demultiplexer chip select control signal outputs
   pinMode(PIN_CSG2B, OUTPUT); // 74LS138 Pin 5 - /G2B
@@ -221,41 +255,33 @@ void setup() {
 }
 
 int c;
+int iters = 0;
 
 void loop() {
   // put your main code here, to run repeatedly:
   int c, i, qq;
 
-  for (c = 0; c < 60; c++ ) {
-    int c_banknum = c / 15;
-    int c_bankcol = c % 15;
-    int c_latchbit = c_bankcol & 7;
-    int c_latchnum = ( c_bankcol & 8 ) >> 3;
+  if ( iters % 2 == 0 ) {
+    qq = (millis() >> 9) & 0x7f;
+    for ( c = 0; c < 60; c++ ) {
+      ledbuffer[c] = qq+c;
+    }
+  }
+  iters = iters + 1;
+  
+  for (c = 0; c < 15; c++ ) {
+    set_matrix_bank_register(0,ledbuffer[c]);
+    set_matrix_bank_register(1,ledbuffer[c+15]);
+    set_matrix_bank_register(2,ledbuffer[c+30]);
+    set_matrix_bank_register(3,ledbuffer[c+45]);
+    // int c_banknum = c / 15;
+    // int c_bankcol = c % 15;
+    int c_latchbit = c & 7;
+    int c_latchnum = ( c & 8 ) >> 3;
 
     set_matrix_col_latch(c_latchnum,c_latchbit,LOW);
-    enable_col(c);
-    qq = (millis() >> 9) & 0x7f;
-
-    for ( i = 0; i < 7; i++ ) {
-      int portnum = i + 3;
-      if ( qq & ( 1 << i ) ) {
-        digitalWrite(portnum,HIGH);
-      } else {
-        digitalWrite(portnum,LOW);
-      }
-      // finally, re-enable LS138 to effect the register load
-      digitalWrite(PIN_CSG2B,LOW);
-      digitalWrite(PIN_CSG2A,LOW);
-      delay(1);
-      digitalWrite(PIN_CSG2B,HIGH);
-      digitalWrite(PIN_CSG2A,HIGH);
-      delay(1);
-      // re-enable the LS138 prior to strobing the pixel
-      digitalWrite(PIN_CSG2B,LOW);
-      digitalWrite(PIN_CSG2A,LOW);
-      delay(1);  
-      delay(50);
-    }
+    delay(1);
     set_matrix_col_latch(c_latchnum,c_latchbit,HIGH);
   }
+//  delay(50);
 }
