@@ -4,7 +4,7 @@ int PIN_CSG2B = A0;
 int PIN_CSSA  = A1;
 int PIN_CSSB  = A2;
 int PIN_CSSC  = A3;
-int PIN_CSG2A = A4;
+int PIN_CSG2A = A0;
 
 int PIN_DBUS0 = 2;
 int PIN_DBUS1 = 3;
