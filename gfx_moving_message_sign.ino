@@ -280,7 +280,7 @@ void loop() {
     int c_latchnum = ( c & 8 ) >> 3;
 
     set_matrix_col_latch(c_latchnum,c_latchbit,LOW);
-    delay(1);
+    delayMicroseconds(500);
     set_matrix_col_latch(c_latchnum,c_latchbit,HIGH);
   }
 //  delay(50);
