@@ -78,20 +78,6 @@ byte ledbuffer[] = {
   B00000000
 };
 
-void fullreset(void) {
-  // zero out the data bus and pull the reset line low to clear registers
-  digitalWrite(PIN_DBUS0,LOW);
-  digitalWrite(PIN_DBUS1,LOW);
-  digitalWrite(PIN_DBUS2,LOW);
-  digitalWrite(PIN_DBUS3,LOW);
-  digitalWrite(PIN_DBUS4,LOW);
-  digitalWrite(PIN_DBUS5,LOW);
-  digitalWrite(PIN_DBUS6,LOW);
-  digitalWrite(PIN_DBUS7,LOW);  // reset line low
-  delay(10) ;           // keep it low for .01 sec
-  digitalWrite(PIN_DBUS7,HIGH); // pull up reset line
-}
-
 void set_matrix_col_latch(int latch_num, int latch_bit, int latch_set) {
   int latch_i, s0val, s1val, s2val;
   // start by disabling LS138 outputs
@@ -196,7 +182,18 @@ void movingsign_bootstrap(void) {
   digitalWrite(PIN_CSSB,LOW);
   digitalWrite(PIN_CSSC,LOW);
   digitalWrite(PIN_CSG2A,HIGH);
-  fullreset();
+  // zero out the data bus and pull the reset line low to clear registers
+  digitalWrite(PIN_DBUS0,LOW);
+  digitalWrite(PIN_DBUS1,LOW);
+  digitalWrite(PIN_DBUS2,LOW);
+  digitalWrite(PIN_DBUS3,LOW);
+  digitalWrite(PIN_DBUS4,LOW);
+  digitalWrite(PIN_DBUS5,LOW);
+  digitalWrite(PIN_DBUS6,LOW);
+  digitalWrite(PIN_DBUS7,LOW);  // reset line low
+  delay(1) ;           // keep it low for .01 sec
+  digitalWrite(PIN_DBUS7,HIGH); // pull up reset line
+  //
   for ( int l_i = 0; l_i < 2; l_i ++ ) {
     for ( int l_b = 0; l_b < 8; l_b ++ ) {
       set_matrix_col_latch(l_i,l_b,HIGH);
